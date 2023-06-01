@@ -1,19 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
-using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace CaclulatorDemo
 {
     public partial class Form1 : Form
     {
-        const string divideByZero = "Err!";
-        const string syntaxErr = "SYNTAX ERROR!";
+        const string divideByZero = "Undefined";
+        const string syntaxErr = "Niepoprawne znaki";
         bool decimalPointActive = false;
         public Form1()
         {
@@ -22,19 +18,13 @@ namespace CaclulatorDemo
 
         private void BtnCopy_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(txtDisplay.Text)) return;
-            Clipboard.SetText(txtDisplay.Text);
-        }
-
-        private void BtnReset_Click(object sender, EventArgs e)
-        {
             decimalPointActive = false;
             PreCheck_ButtonClick();
             previousOperation = Operation.None;
             txtDisplay.Clear();
         }
 
-        private void BtnClear_Click(object sender, EventArgs e)
+        private void BtnReset_Click(object sender, EventArgs e)
         {
             decimalPointActive = false;
             PreCheck_ButtonClick();
@@ -52,10 +42,24 @@ namespace CaclulatorDemo
             {
                 previousOperation = Operation.None;
             }
-            if(previousOperation != Operation.None)
+            if (previousOperation != Operation.None)
             {
                 currentOperation = previousOperation;
             }
+        }
+
+        private void BtnClear_Click(object sender, EventArgs e)
+        {
+            if (txtDisplay.TextLength == 0 || previousOperation != Operation.None) return;
+            PreCheck_ButtonClick();
+            if(float.TryParse(txtDisplay.Text, out float number))
+            {
+                txtDisplay.Text = $"{number * number}";
+            } else
+            {
+                txtDisplay.Text = syntaxErr;
+            }
+            calculated = true;
         }
 
         private void BtnDiv_Click(object sender, EventArgs e)
@@ -68,6 +72,7 @@ namespace CaclulatorDemo
             previousOperation = currentOperation;
             EnableOperatorButtons(false);
             txtDisplay.Text += (sender as Button).Text;
+            calculated = false;
         }
 
         private void BtnMul_Click(object sender, EventArgs e)
@@ -79,6 +84,7 @@ namespace CaclulatorDemo
             previousOperation = currentOperation;
             EnableOperatorButtons(false);
             txtDisplay.Text += (sender as Button).Text;
+            calculated = false;
         }
 
         private void BtnSub_Click(object sender, EventArgs e)
@@ -91,6 +97,7 @@ namespace CaclulatorDemo
             previousOperation = currentOperation;
             EnableOperatorButtons(false);
             txtDisplay.Text += (sender as Button).Text;
+            calculated = false;
         }
 
         private void BtnAdd_Click(object sender, EventArgs e)
@@ -103,6 +110,7 @@ namespace CaclulatorDemo
             previousOperation = currentOperation;
             EnableOperatorButtons(false);
             txtDisplay.Text += (sender as Button).Text;
+            calculated = false;
         }
 
         private void PerformCalculation(Operation previousOperation)
@@ -125,7 +133,7 @@ namespace CaclulatorDemo
                         txtDisplay.Text = (lstNums[0] + lstNums[1]).ToString();
                         break;
                     case Operation.Sub:
-                        int idx = txtDisplay.Text.LastIndexOf('-'); // To handle ex: -9-2
+                        int idx = txtDisplay.Text.LastIndexOf('-');
                         if (idx > 0)
                         {
                             var op1 = Convert.ToDouble(txtDisplay.Text.Substring(0, idx));
@@ -181,13 +189,23 @@ namespace CaclulatorDemo
             }
             EnableOperatorButtons();
             PreCheck_ButtonClick();
+            if (calculated)
+            {
+                txtDisplay.Text = (btn as Button).Text;
+                calculated = false;
+            }
+            else
+            {
             txtDisplay.Text += (btn as Button).Text;
+            }
         }
 
         private void PreCheck_ButtonClick()
         {
             if (txtDisplay.Text == divideByZero || txtDisplay.Text == syntaxErr)
+            {
                 txtDisplay.Clear();
+            }
             if(previousOperation != Operation.None)
             {
                 EnableOperatorButtons();
@@ -199,11 +217,11 @@ namespace CaclulatorDemo
             btnMul.Enabled = enable;
             btnDiv.Enabled = enable;
             btnAdd.Enabled = enable;
+            btnSub.Enabled = enable;
             if (!enable)
             {
                 decimalPointActive = false;
             }
-            //btnSub.Enabled = enable;
         }
         enum Operation
         {
@@ -213,6 +231,8 @@ namespace CaclulatorDemo
             Div,
             None
         }
+
+        bool calculated = false;
 
         Operation previousOperation = Operation.None;
         Operation currentOperation = Operation.None;
@@ -224,6 +244,7 @@ namespace CaclulatorDemo
                 PerformCalculation(previousOperation);
 
             previousOperation = Operation.None;
+            calculated = true;
         }
 
         private void BtnDecimal_Click(object sender, EventArgs e)
@@ -237,6 +258,11 @@ namespace CaclulatorDemo
             PreCheck_ButtonClick();
             txtDisplay.Text += (sender as Button).Text;
             decimalPointActive = true;
+        }
+
+        private void txtDisplay_TextChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }
